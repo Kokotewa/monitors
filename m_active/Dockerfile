@@ -15,7 +15,7 @@ RUN pip3 install pymssql prometheus_client
 ENV DB_HOSTNAME = '' 
 ENV DB_DATABASE = ''
 ENV DB_USERNAME = ''
-#ENV DB_PASSWORD = ''
+ENV DB_PASSWORD = ''
 ENV POLL_INTERVAL = 720
 
 # Copy Script

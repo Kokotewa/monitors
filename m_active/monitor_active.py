@@ -466,7 +466,11 @@ if __name__ == '__main__':
     DB_USERNAME = str(os.getenv('DB_USERNAME'))
     DB_PASSWORD = str(os.getenv('DB_PASSWORD', 'False'))
 
-    if DB_PASSWORD == 'False':
+    if (
+            DB_PASSWORD == 'False' or 
+            DB_PASSWORD == ''
+        )
+        :
         logging.info('DB_PASSWORD environment variable is not set, reading from secret')
         DB_PASSWORD = open('/run/secrets/DB_PASSWORD').read()
 
