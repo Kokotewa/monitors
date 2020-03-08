@@ -157,10 +157,9 @@ def gen_charinfo_db(server, user, password, database):
 
 def initialize_active(charinfo_db, gauges):
     """
-    Initialize charinfo_active and mapinfo_active dictionaries.
+    Initialize charinfo_active dictionary.
     """
     charinfo_active = {}
-    mapinfo_active = {}
     for character in charinfo_db:
         logging.info('Initializing character %s', character)
         charinfo_active[character] = {
@@ -203,66 +202,71 @@ def initialize_active(charinfo_db, gauges):
             AID=charinfo_active[character]['id']['AID']
             ).set(charinfo_active[character]['info']['money'])
 
-    return charinfo_active, mapinfo_active
+    return charinfo_active
 
-def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
+def update_active(charinfo_active, charinfo_db, gauges):
     """
-    Update charinfo_active and mapinfo_active dictionaries to latest character state.
+    Update charinfo_active dictionary to latest character state.
     """
-    for map_name in mapinfo_active:
-        mapinfo_active[map_name] = 0
+    mapinfo_active = {}
 
-    for character in charinfo_db:
-        try:
-            # Character is active if position|info differs from last recorded position|info
-            if (
-                    charinfo_db[character]['position'] != charinfo_active[character]['position'] or
-                    charinfo_db[character]['info'] != charinfo_active[character]['info']
-                ):
-                update = True
-                charinfo_active[character]['position'] = charinfo_db[character]['position']
-                charinfo_active[character]['info'] = charinfo_db[character]['info']
-                charinfo_active[character]['active']['week'] += 1
-                charinfo_active[character]['active']['day'] += 1
-                charinfo_active[character]['active']['hour'] += 1
-                charinfo_active[character]['active']['consecutive'] += 1
-                charinfo_active[character]['active']['now'] = 1
-
-            # Character was previously active
-            elif charinfo_active[character]['active']['now'] == 1:
-                update = True
-                charinfo_active[character]['active']['consecutive'] = 0
-                charinfo_active[character]['active']['now'] = 0
-            else:
-                update = False
-
-        # Newly created characters will be absent from charinfo_active
-        except KeyError:
-            update = True
-            logging.debug(
-                'Character %s is newly created, adding to charinfo_active',
-                character)
-            charinfo_active[character] = {
-                'position': charinfo_db[character]['position'],
-                'info': charinfo_db[character]['info'],
-                'id': charinfo_db[character]['id'],
-                'active': {
-                    'week': 0,
-                    'day': 0,
-                    'hour': 0,
-                    'consecutive': 0,
-                    'now': 0
-                    }
+    # Create charinfo_active keys for new characters
+    characters_created = charinfo_db.keys() - charinfo_active.keys()
+    for character in characters_created:
+        logging.info('Character %s is new, adding to charinfo_active', character)
+        charinfo_active[character] = {
+            'position': charinfo_db[character]['position'],
+            'info': charinfo_db[character]['info'],
+            'id': charinfo_db[character]['id'],
+            'active': {
+                'week': 0,
+                'day': 0,
+                'hour': 0,
+                'consecutive': 0,
+                'now': 0
                 }
+            }
+
+    # Remove charinfo_active keys for deleted characters
+    characters_removed = charinfo_active.keys() - charinfo_db.keys()
+    for character in characters_removed:
+        logging.info('Character %s is deleted, removing from charinfo_active', character)
+        gauges['active']['character'].labels(
+            character=character,
+            GID=charinfo_active[character]['id']['GID'],
+            AID=charinfo_active[character]['id']['AID']
+            ).set(0)
+        del charinfo_active[character]
+
+    # Update charinfo_active state and character gauges
+    for character in charinfo_db:
+        # Character is active if position|info differs from last recorded position|info
+        if (
+                charinfo_db[character]['position'] != charinfo_active[character]['position'] or
+                charinfo_db[character]['info'] != charinfo_active[character]['info']
+            ):
+            update = True
+            charinfo_active[character]['position'] = charinfo_db[character]['position']
+            charinfo_active[character]['info'] = charinfo_db[character]['info']
+            charinfo_active[character]['active']['week'] += 1
+            charinfo_active[character]['active']['day'] += 1
+            charinfo_active[character]['active']['hour'] += 1
+            charinfo_active[character]['active']['consecutive'] += 1
+            charinfo_active[character]['active']['now'] = 1
+
+        # Character was previously active
+        elif charinfo_active[character]['active']['now'] == 1:
+            update = True
+            charinfo_active[character]['active']['consecutive'] = 0
+            charinfo_active[character]['active']['now'] = 0
+        else:
+            update = False
 
         if update is True:
             # Update mapinfo_active dictionary
             try:
                 mapinfo_active[charinfo_active[character]['position']['mapname']] += 1
             except KeyError:
-                logging.debug(
-                    'Map %s is newly visited, adding to mapinfo_active',
-                    charinfo_active[character]['position']['mapname'])
                 mapinfo_active[charinfo_active[character]['position']['mapname']] = 1
 
             # Update character active gauge
@@ -327,7 +331,7 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
             map_name=map_name
             ).set(mapinfo_active[map_name])
 
-    return charinfo_active, mapinfo_active
+    return charinfo_active
 
 
 def reset_active(charinfo_active, last_reset):
@@ -425,13 +429,13 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
         'hour': time_now.replace(minute=0, second=0, microsecond=0)
         }
 
-    # Initialize charinfo_active and mapinfo_active dictionaries
+    # Initialize charinfo_active dictionary
     charinfo_db = gen_charinfo_db(
         server=db_hostname,
         user=db_username,
         password=db_password,
         database=db_database)
-    charinfo_active, mapinfo_active = initialize_active(charinfo_db=charinfo_db, gauges=gauges)
+    charinfo_active = initialize_active(charinfo_db=charinfo_db, gauges=gauges)
     time.sleep(poll_interval)
 
     # Begin monitor loop
@@ -444,9 +448,8 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
             database=db_database)
 
         # Update active characters
-        charinfo_active, mapinfo_active = update_active(
+        charinfo_active = update_active(
             charinfo_active=charinfo_active,
-            mapinfo_active=mapinfo_active,
             charinfo_db=charinfo_db,
             gauges=gauges)
 
@@ -464,15 +467,7 @@ if __name__ == '__main__':
     DB_HOSTNAME = str(os.getenv('DB_HOSTNAME'))
     DB_DATABASE = str(os.getenv('DB_DATABASE'))
     DB_USERNAME = str(os.getenv('DB_USERNAME'))
-    DB_PASSWORD = str(os.getenv('DB_PASSWORD', 'False'))
-
-    if (
-            DB_PASSWORD == 'False' or 
-            DB_PASSWORD == ''
-        )
-        :
-        logging.info('DB_PASSWORD environment variable is not set, reading from secret')
-        DB_PASSWORD = open('/run/secrets/DB_PASSWORD').read()
+    DB_PASSWORD = open('/run/secrets/DB_PASSWORD').read()
 
     prometheus_client.start_http_server(PROMETHEUS_PORT)
 
