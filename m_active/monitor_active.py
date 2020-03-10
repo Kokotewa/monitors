@@ -247,7 +247,7 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
                 charinfo_db[character]['position'] != charinfo_active[character]['position'] or
                 charinfo_db[character]['info'] != charinfo_active[character]['info']
             ):
-            update = True
+            update_character, update_map = True, True
             charinfo_active[character]['position'] = charinfo_db[character]['position']
             charinfo_active[character]['info'] = charinfo_db[character]['info']
             charinfo_active[character]['active']['week'] += 1
@@ -258,19 +258,13 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
 
         # Character was previously active
         elif charinfo_active[character]['active']['now'] == 1:
-            update = True
+            update_character, update_map = True, False
             charinfo_active[character]['active']['consecutive'] = 0
             charinfo_active[character]['active']['now'] = 0
         else:
-            update = False
+            update_character, update_map = False, False
 
-        if update is True:
-            # Update mapinfo_active dictionary
-            try:
-                mapinfo_active[charinfo_active[character]['position']['mapname']] += 1
-            except KeyError:
-                mapinfo_active[charinfo_active[character]['position']['mapname']] = 1
-
+        if update_character is True:
             # Update character active gauge
             gauges['active']['character'].labels(
                 character=character,
@@ -326,6 +320,13 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
                     week=charinfo_active[character]['active']['week']
                     )
                 )
+
+        if update_map is True:
+            # Update mapinfo_active dictionary
+            try:
+                mapinfo_active[charinfo_active[character]['position']['mapname']] += 1
+            except KeyError:
+                mapinfo_active[charinfo_active[character]['position']['mapname']] = 1
 
     # Update map active gauge
     for map_name in mapinfo_active:
