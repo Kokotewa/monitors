@@ -157,9 +157,10 @@ def gen_charinfo_db(server, user, password, database):
 
 def initialize_active(charinfo_db, gauges):
     """
-    Initialize charinfo_active dictionary.
+    Initialize charinfo_active and mapinfo_active dictionaries.
     """
     charinfo_active = {}
+    mapinfo_active = {}
     for character in charinfo_db:
         logging.info('Initializing character %s', character)
         charinfo_active[character] = {
@@ -202,13 +203,14 @@ def initialize_active(charinfo_db, gauges):
             AID=charinfo_active[character]['id']['AID']
             ).set(charinfo_active[character]['info']['money'])
 
-    return charinfo_active
+    return charinfo_active, mapinfo_active
 
-def update_active(charinfo_active, charinfo_db, gauges):
+def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
     """
-    Update charinfo_active dictionary to latest character state.
+    Update charinfo_active and mapinfo_active dictionaries to latest character state.
     """
-    mapinfo_active = {}
+    for map_name in mapinfo_active:
+        mapinfo_active[map_name] = 0
 
     # Create charinfo_active keys for new characters
     characters_created = charinfo_db.keys() - charinfo_active.keys()
@@ -331,7 +333,7 @@ def update_active(charinfo_active, charinfo_db, gauges):
             map_name=map_name
             ).set(mapinfo_active[map_name])
 
-    return charinfo_active
+    return charinfo_active, mapinfo_active
 
 
 def reset_active(charinfo_active, last_reset):
@@ -429,13 +431,13 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
         'hour': time_now.replace(minute=0, second=0, microsecond=0)
         }
 
-    # Initialize charinfo_active dictionary
+    # Initialize charinfo_active and mapinfo_active dictionaries
     charinfo_db = gen_charinfo_db(
         server=db_hostname,
         user=db_username,
         password=db_password,
         database=db_database)
-    charinfo_active = initialize_active(charinfo_db=charinfo_db, gauges=gauges)
+    charinfo_active, mapinfo_active = initialize_active(charinfo_db=charinfo_db, gauges=gauges)
     time.sleep(poll_interval)
 
     # Begin monitor loop
@@ -447,9 +449,10 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
             password=db_password,
             database=db_database)
 
-        # Update active characters
-        charinfo_active = update_active(
+        # Update active characters and maps
+        charinfo_active, mapinfo_active = update_active(
             charinfo_active=charinfo_active,
+            mapinfo_active=mapinfo_active,
             charinfo_db=charinfo_db,
             gauges=gauges)
 
