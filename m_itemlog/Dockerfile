@@ -1,4 +1,4 @@
-## Containerized active player monitor
+## Containerized active itemlog monitor
 # Koko 2020
 FROM ubuntu
 
@@ -17,7 +17,7 @@ ENV POLL_INTERVAL = 720
 ENV PROMETHEUS_PORT = 80
 
 # Copy Script
-COPY monitor_active.py monitor_active.py
+COPY monitor_itemlog.py monitor_itemlog.py
 
 # Executable
-CMD ["python3", "monitor_active.py"]
+CMD ["python3", "monitor_itemlog.py"]

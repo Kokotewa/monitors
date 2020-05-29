@@ -1,0 +1,63 @@
+version: "3.3"
+
+networks:
+  default:
+
+secrets:
+  monitoractive-DB_PASSWORD:
+    file: ./secrets/monitoractive-DB_PASSWORD
+  monitoritemlog-DB_PASSWORD:
+    file: ./secrets/monitoritemlog-DB_PASSWORD
+
+configs:
+  prometheus.yml:
+    file: ./configs/prometheus.yml
+
+services:
+  m_active:
+    image: "monitor_active:2.0.0"
+    ports:
+      - 80:9091
+    environment:
+      DB_HOSTNAME: '192.168.1.100'
+      DB_USERNAME: 'monitoractive'
+      DB_DATABASE: 'rocp' 
+      POLL_INTERVAL: 720
+      PROMETHEUS_PORT: 80 
+    secrets:
+      - source: monitoractive-DB_PASSWORD
+        target: /run/secrets/DB_PASSWORD
+
+  m_itemlog:
+    image: "monitor_itemlog:1.0.0"
+    ports:
+      - 80:9092
+    environment:
+      DB_HOSTNAME: '192.168.1.100'
+      DB_USERNAME: 'monitoritemlog'
+      DB_DATABASE: 'rocp'
+      POLL_INTERVAL: 720
+      PROMETHEUS_PORT: 80
+    secrets:
+      - source: monitoritemlog-DB_PASSWORD
+        target: /run/secrets/DB_PASSWORD
+
+  prometheus:
+    image: prom/prometheus
+    user: "1000:1000"
+    ports:
+     - 9090:9090
+    configs:
+      - source: prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+    volumes:
+      - ./data/prometheus:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    user: "1000:1000"
+    ports:
+     - 3000:3000
+    volumes:
+     - ./data/grafana:/var/lib/grafana
+
