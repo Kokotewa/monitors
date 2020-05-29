@@ -1,8 +1,8 @@
 # m_itemlog
-
+`m_itemlog` monitors how characters interact with items, specifically the frequency of actions/time.  This monitor may be used to detect item injection exploits such as NPC quest rewards, mail, trade, cart:storage:inventory, etc.
 
 ## Required Stored Procedure
-`m_itemlog` interacts with the database using the stored procedure below.  You must create this stored procedure within your database, and provide `m_itemlog` a mssql account with related permissions, prior to running the monitor.
+`m_itemlog` interacts with the database using the stored procedure below.  You must create this stored procedure within your database, and provide `m_itemlog` a mssql account with related permissions, prior to running the monitor.  In the event your zone:database update frequency is not 12 minutes, it must be updated within the stored procedure prior to running the monitor.
 ```
 # rocp_admin_itemlog_db
 SELECT srcCharName,
