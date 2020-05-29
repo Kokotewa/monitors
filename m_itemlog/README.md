@@ -11,7 +11,7 @@ SELECT srcCharName,
   Action FROM itemLog.dbo.ItemLog where logtime > DATEADD(minute, -12, GETDATE())
 ```
 
-# Example m_itemlog Logs
+## Example m_itemlog Logs
 ```
 2020-05-29 23:07:31,360 Iteration complete, sleeping 720 seconds
 2020-05-29 23:19:31,505 Character Koko is new, adding to itemlog_active
