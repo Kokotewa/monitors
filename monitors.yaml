@@ -15,15 +15,14 @@ configs:
 
 services:
   m_active:
-    image: "monitor_active:2.0.0"
+    image: "monitor_active:1.0.0"
     ports:
-      - 80:9091
+      - 9091:80
     environment:
       DB_HOSTNAME: '192.168.1.100'
       DB_USERNAME: 'monitoractive'
       DB_DATABASE: 'rocp' 
       POLL_INTERVAL: 720
-      PROMETHEUS_PORT: 80 
     secrets:
       - source: monitoractive-DB_PASSWORD
         target: /run/secrets/DB_PASSWORD
@@ -31,13 +30,12 @@ services:
   m_itemlog:
     image: "monitor_itemlog:1.0.0"
     ports:
-      - 80:9092
+      - 9092:80
     environment:
       DB_HOSTNAME: '192.168.1.100'
       DB_USERNAME: 'monitoritemlog'
       DB_DATABASE: 'rocp'
       POLL_INTERVAL: 720
-      PROMETHEUS_PORT: 80
     secrets:
       - source: monitoritemlog-DB_PASSWORD
         target: /run/secrets/DB_PASSWORD

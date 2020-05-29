@@ -10,11 +10,11 @@ RUN apt install -y \
 RUN pip3 install pymssql prometheus_client
 
 # Environment Placeholders
-ENV DB_HOSTNAME = '' 
-ENV DB_DATABASE = ''
-ENV DB_USERNAME = ''
-ENV POLL_INTERVAL = 720
-ENV PROMETHEUS_PORT = 80
+ENV DB_HOSTNAME='' 
+ENV DB_DATABASE=''
+ENV DB_USERNAME=''
+ENV POLL_INTERVAL=720
+ENV PROMETHEUS_PORT=80
 
 # Copy Script
 COPY monitor_itemlog.py monitor_itemlog.py
