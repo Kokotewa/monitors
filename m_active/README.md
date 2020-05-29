@@ -1,6 +1,7 @@
 # m_active
 
-
+## Required Stored Procedure
+`m_active` interacts with the database using the stored procedure below.  You must create this stored procedure within your database, and provide `m_active` a mssql account with related permissions, prior to running the monitor.
 ```
 # Stored Procedure rocp_admin_charinfo_db
 SELECT CharName,
@@ -19,7 +20,7 @@ SELECT CharName,
   money from character.dbo.charinfo
 ```
 
-Example m_active output
+## Example m_active output
 ```
 2020-05-29 23:18:48,380 Iteration complete, sleeping 720 seconds
 2020-05-29 23:30:48,519 Artea                     High Priest     cmd_fild01.gat (301,218)  blv: 91 jlv: 59 bpts:  9 jpts:  5 c:  3 h:  2 d:  3 w:  3
