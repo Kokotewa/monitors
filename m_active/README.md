@@ -3,7 +3,7 @@
 ## Required Stored Procedure
 `m_active` interacts with the database using the stored procedure below.  You must create this stored procedure within your database, and provide `m_active` a mssql account with related permissions, prior to running the monitor.
 ```
-# Stored Procedure rocp_admin_charinfo_db
+# rocp_admin_charinfo_db
 SELECT CharName,
   mapname,
   xPos,
