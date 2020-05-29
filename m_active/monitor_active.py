@@ -4,9 +4,6 @@ Tracks active characters based on their last recorded position within
 character.dbo.charinfo.  Character activity is tracked on a week, day,
 hour, consecutive, and current (now) granularity every 'poll_interval'.
 v1.0.0 Koko - 20/01/19
-v2.0.0 Koko - 20/02/09
- - Increased quantity of logged metrics
- - Integrated with Prometheus
 """
 import os
 import logging
