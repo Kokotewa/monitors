@@ -1,4 +1,5 @@
 # m_active
+`m_active` monitors how frequency characters are active by comparing their last recorded (experience, zeny, map_position) against their previously recorded (experience, zeny, map_position).  In the event that these values differ, the character is considered active.  In the event that they are the same, the character is considered inactive.  This monitor may be used to detect automated characters which are active for prolonged periods of time.
 
 ## Required Stored Procedure
 `m_active` interacts with the database using the stored procedure below.  You must create this stored procedure within your database, and provide `m_active` a mssql account with related permissions, prior to running the monitor.
