@@ -9,7 +9,7 @@ import os
 import logging
 import time
 import datetime
-import pymssql
+import pyodbc
 import prometheus_client
 
 if bool(os.getenv('DEBUG')):
@@ -102,24 +102,26 @@ def job_lookup(job_id):
 
     return job_str
 
-def gen_charinfo_db(server, user, password, database):
+def gen_charinfo_db(server, username, password, database):
     """
     Return character positions, id, and info from db charinfo table.
     """
     # Create a new connection to database
     logging.debug('Opening connection to %s', server)
-    connection = pymssql.connect(
-        server=server,
-        user=user,
-        password=password,
-        database=database)
+    connection = pyodbc.connect(
+        'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'.format(
+            driver='{ODBC Driver 17 for SQL Server}',
+            server=server,
+            database=database,
+            username=username,
+            password=password
+            )
+        )
 
     # Perform DB query
     cursor = connection.cursor()
-    cursor.callproc('rocp_admin_charinfo_db')
-    cursor.nextset()
+    cursor.execute('rocp_admin_charinfo_db')
     results = cursor.fetchall()
-    connection.commit()
 
     # Close connection
     logging.debug('Closing connection to %s', server)
@@ -175,29 +177,19 @@ def initialize_active(charinfo_db, gauges):
 
         # Update character info gauges
         gauges['info']['base_level'].labels(
-            character=character,
-            GID=charinfo_active[character]['id']['GID'],
-            AID=charinfo_active[character]['id']['AID']
+            character=character
             ).set(charinfo_active[character]['info']['base_level'])
         gauges['info']['job_level'].labels(
-            character=character,
-            GID=charinfo_active[character]['id']['GID'],
-            AID=charinfo_active[character]['id']['AID']
+            character=character
             ).set(charinfo_active[character]['info']['job_level'])
         gauges['info']['stat_points'].labels(
-            character=character,
-            GID=charinfo_active[character]['id']['GID'],
-            AID=charinfo_active[character]['id']['AID']
+            character=character
             ).set(charinfo_active[character]['info']['stat_points'])
         gauges['info']['skill_points'].labels(
-            character=character,
-            GID=charinfo_active[character]['id']['GID'],
-            AID=charinfo_active[character]['id']['AID']
+            character=character
             ).set(charinfo_active[character]['info']['skill_points'])
         gauges['info']['money'].labels(
-            character=character,
-            GID=charinfo_active[character]['id']['GID'],
-            AID=charinfo_active[character]['id']['AID']
+            character=character
             ).set(charinfo_active[character]['info']['money'])
 
     return charinfo_active, mapinfo_active
@@ -264,36 +256,24 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
         if update_character is True:
             # Update character active gauge
             gauges['active']['character'].labels(
-                character=character,
-                GID=charinfo_active[character]['id']['GID'],
-                AID=charinfo_active[character]['id']['AID']
+                character=character
                 ).set(charinfo_active[character]['active']['now'])
 
             # Update character info gauges
             gauges['info']['base_level'].labels(
-                character=character,
-                GID=charinfo_active[character]['id']['GID'],
-                AID=charinfo_active[character]['id']['AID']
+                character=character
                 ).set(charinfo_active[character]['info']['base_level'])
             gauges['info']['job_level'].labels(
-                character=character,
-                GID=charinfo_active[character]['id']['GID'],
-                AID=charinfo_active[character]['id']['AID']
+                character=character
                 ).set(charinfo_active[character]['info']['job_level'])
             gauges['info']['stat_points'].labels(
-                character=character,
-                GID=charinfo_active[character]['id']['GID'],
-                AID=charinfo_active[character]['id']['AID']
+                character=character
                 ).set(charinfo_active[character]['info']['stat_points'])
             gauges['info']['skill_points'].labels(
-                character=character,
-                GID=charinfo_active[character]['id']['GID'],
-                AID=charinfo_active[character]['id']['AID']
+                character=character
                 ).set(charinfo_active[character]['info']['skill_points'])
             gauges['info']['money'].labels(
-                character=character,
-                GID=charinfo_active[character]['id']['GID'],
-                AID=charinfo_active[character]['id']['AID']
+                character=character
                 ).set(charinfo_active[character]['info']['money'])
 
             logging.info(
@@ -389,34 +369,34 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
             'character': prometheus_client.Gauge(
                 name='character_active',
                 documentation='Whether the character is active',
-                labelnames=['character', 'GID', 'AID']
+                labelnames=['character']
                 )
             },
         'info': {
             'base_level': prometheus_client.Gauge(
                 name='character_base_level',
                 documentation='Character base level',
-                labelnames=['character', 'GID', 'AID']
+                labelnames=['character']
                 ),
             'job_level': prometheus_client.Gauge(
                 name='character_job_level',
                 documentation='Character job level',
-                labelnames=['character', 'GID', 'AID']
+                labelnames=['character']
                 ),
             'stat_points': prometheus_client.Gauge(
                 name='character_stat_points',
                 documentation='Character unallocated stat points',
-                labelnames=['character', 'GID', 'AID']
+                labelnames=['character']
                 ),
             'skill_points': prometheus_client.Gauge(
                 name='character_skill_points',
                 documentation='Character unallocated skill points',
-                labelnames=['character', 'GID', 'AID']
+                labelnames=['character']
                 ),
             'money': prometheus_client.Gauge(
                 name='character_money',
                 documentation='Character money',
-                labelnames=['character', 'GID', 'AID']
+                labelnames=['character']
                 )
             }
         }
@@ -432,9 +412,10 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
     # Initialize charinfo_active and mapinfo_active dictionaries
     charinfo_db = gen_charinfo_db(
         server=db_hostname,
-        user=db_username,
+        username=db_username,
         password=db_password,
-        database=db_database)
+        database=db_database
+        )
     charinfo_active, mapinfo_active = initialize_active(charinfo_db=charinfo_db, gauges=gauges)
     time.sleep(poll_interval)
 
@@ -443,7 +424,7 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
         # Generate new charinfo from database
         charinfo_db = gen_charinfo_db(
             server=db_hostname,
-            user=db_username,
+            username=db_username,
             password=db_password,
             database=db_database)
 
@@ -477,4 +458,5 @@ if __name__ == '__main__':
         db_username=DB_USERNAME,
         db_password=DB_PASSWORD,
         db_database=DB_DATABASE,
-        poll_interval=POLL_INTERVAL)
+        poll_interval=POLL_INTERVAL
+        )

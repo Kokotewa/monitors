@@ -9,7 +9,7 @@ import os
 import logging
 import time
 import datetime
-import pymssql
+import pyodbc
 import prometheus_client
 
 if bool(os.getenv('DEBUG')):
@@ -18,27 +18,28 @@ else:
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 
-def gen_itemlog_db(server, user, password, database, action_keys):
+def gen_itemlog_db(server, username, password, database, action_keys):
     """
     Return character itemlog activity from ItemLog table.
     """
     # Create a new connection to database
     logging.debug('Opening connection to %s', server)
-    connection = pymssql.connect(
-        server=server,
-        user=user,
-        password=password,
-        database=database
+    connection = pyodbc.connect(
+        'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'.format(
+            driver='{ODBC Driver 17 for SQL Server}',
+            server=server,
+            database=database,
+            username=username,
+            password=password
+            )
         )
 
     # Perform DB query
     try: 
         cursor = connection.cursor()
-        cursor.callproc('rocp_admin_itemlog_db')
-        cursor.nextset()
+        cursor.execute('rocp_admin_itemlog_db')
         results = cursor.fetchall()
-        connection.commit()
-    except pymssql.OperationalError:
+    except pyodbc.OperationalError:
         logging.info('No itemlog updates in the last interval')
         results = []
 
@@ -121,9 +122,7 @@ def update_active(itemlog_active, itemlog_db, gauges, action_keys):
         # Update itemlog gauges
         for action in action_keys:
             gauges[action].labels(
-                character=character,
-                GID=itemlog_active[character]['id']['GID'],
-                AID=itemlog_active[character]['id']['AID']
+                character=character
                 ).set(itemlog_active[character]['action'][action]['now'])
 
     return itemlog_active
@@ -181,137 +180,137 @@ def monitor_itemlog(db_hostname, db_username, db_password, db_database, poll_int
         0: prometheus_client.Gauge(
             name='item_drop',
             documentation='Items removed by character drop',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         1: prometheus_client.Gauge(
             name='item_pickup',
             documentation='Items created by character pickup',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         2: prometheus_client.Gauge(
             name='item_consumed',
             documentation='Items consumed by character',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         3: prometheus_client.Gauge(
             name='item_traded',
             documentation='Items traded between characters',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         4: prometheus_client.Gauge(
             name='item_bought_pc',
             documentation='Items moved by purchase from PC',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         5: prometheus_client.Gauge(
             name='item_bought_npc',
             documentation='Items created by purchase from NPC',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         6: prometheus_client.Gauge(
             name='item_sold_npc',
             documentation='Items consumed by sell to NPC',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         7: prometheus_client.Gauge(
             name='item_mvp',
             documentation='Items created by MVP rewards',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         8: prometheus_client.Gauge(
             name='item_stolen',
             documentation='Items created by steal',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         9: prometheus_client.Gauge(
             name='item_misc_1',
             documentation='Items consumed by misc_1 e.g. endow skills, pet capture, etc.',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         10: prometheus_client.Gauge(
             name='item_misc_2',
             documentation='N/A',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         11: prometheus_client.Gauge(
             name='item_npc_compulsive',
             documentation='Items created by compulsive NPCs',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         12: prometheus_client.Gauge(
             name='item_npc_event',
             documentation='Items created by event NPCs',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         13: prometheus_client.Gauge(
             name='item_gm',
             documentation='Items created by GMs using /item',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         14: prometheus_client.Gauge(
             name='item_box',
             documentation='Items created by OCAs, OPBs, OBBs, etc.',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         15: prometheus_client.Gauge(
             name='item_blacksmith',
             documentation='Items created by Blacksmiths',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         16: prometheus_client.Gauge(
             name='item_npc_give',
             documentation='Items created by NPC e.g. quest',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         17: prometheus_client.Gauge(
             name='item_npc_take',
             documentation='Items consumed by NPC e.g. quest, refine, etc.',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         18: prometheus_client.Gauge(
             name='zeny_npc',
             documentation='Zeny consumed/created by NPC',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         19: prometheus_client.Gauge(
             name='item_inv_to_kafra',
             documentation='Items moved to Kafra storage from character inventory',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         20: prometheus_client.Gauge(
             name='item_inv_to_cart',
             documentation='Items moved to Cart from character inventory',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         21: prometheus_client.Gauge(
             name='item_kafra_to_inv',
             documentation='Items moved to character inventory from Kafra storage',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         22: prometheus_client.Gauge(
             name='item_kafra_to_cart',
             documentation='Items moved to Kafra storage from character cart',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         23: prometheus_client.Gauge(
             name='item_cart_to_inv',
             documentation='Items moved to character cart from character inventory money',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         24: prometheus_client.Gauge(
             name='item_cart_to_kafra',
             documentation='Items moved to character cart from Kafra storage',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         35: prometheus_client.Gauge(
             name='item_cash_buy',
             documentation='Items created by purchase from cashshop NPC',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             ),
         36: prometheus_client.Gauge(
             name='item_cash_box',
             documentation='Items created by a cashshop box',
-            labelnames=['character', 'GID', 'AID']
+            labelnames=['character']
             )
         }
 
@@ -331,7 +330,7 @@ def monitor_itemlog(db_hostname, db_username, db_password, db_database, poll_int
         # Generate new itemlog_db from database
         itemlog_db = gen_itemlog_db(
             server=db_hostname,
-            user=db_username,
+            username=db_username,
             password=db_password,
             database=db_database,
             action_keys=gauges.keys()
