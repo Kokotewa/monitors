@@ -10,15 +10,16 @@ SELECT CharName,
   xPos,
   yPos,
   GID,
-  AID,
-  job,
+  character.AID,
+  character.job,
   clevel,
   joblevel,
   jobpoint,
   sppoint,
   exp,
   jobexp,
-  money from character.dbo.charinfo
+  money FROM character.dbo.charinfo character INNER JOIN nLogin.dbo.account
+  ON nLogin.dbo.account.AID=character.AID
 ```
 
 ## Example m_active Logs
