@@ -15,7 +15,7 @@ configs:
 
 services:
   m_active:
-    image: "monitor_active:1.0.0"
+    image: "monitor_active:2.0.0"
     ports:
       - 9091:80
     environment:
@@ -28,7 +28,7 @@ services:
         target: /run/secrets/DB_PASSWORD
 
   m_itemlog:
-    image: "monitor_itemlog:1.0.0"
+    image: "monitor_itemlog:2.0.0"
     ports:
       - 9092:80
     environment:
