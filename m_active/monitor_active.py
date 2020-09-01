@@ -149,7 +149,8 @@ def gen_charinfo_db(server, username, password, database):
                 'exp': result[11],
                 'jobexp': result[12],
                 'money': result[13]
-                }
+                },
+            'email': result[14]
             }
 
     return charinfo_db
@@ -172,7 +173,8 @@ def initialize_active(charinfo_db, gauges):
                 'hour': 0,
                 'consecutive': 0,
                 'now': 0
-                }
+                },
+            'email': charinfo_db[character]['email']
             }
 
         # Update character info gauges
@@ -189,7 +191,8 @@ def initialize_active(charinfo_db, gauges):
             character=character
             ).set(charinfo_active[character]['info']['skill_points'])
         gauges['info']['money'].labels(
-            character=character
+            character=character,
+            email=charinfo_active[character]['email']
             ).set(charinfo_active[character]['info']['money'])
 
     return charinfo_active, mapinfo_active
@@ -256,7 +259,8 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
         if update_character is True:
             # Update character active gauge
             gauges['active']['character'].labels(
-                character=character
+                character=character,
+                email=charinfo_active[character]['email']
                 ).set(charinfo_active[character]['active']['now'])
 
             # Update character info gauges
@@ -273,7 +277,8 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
                 character=character
                 ).set(charinfo_active[character]['info']['skill_points'])
             gauges['info']['money'].labels(
-                character=character
+                character=character,
+                email=charinfo_active[character]['email']
                 ).set(charinfo_active[character]['info']['money'])
 
             logging.info(
@@ -369,7 +374,7 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
             'character': prometheus_client.Gauge(
                 name='character_active',
                 documentation='Whether the character is active',
-                labelnames=['character']
+                labelnames=['character', 'email']
                 )
             },
         'info': {
@@ -396,7 +401,7 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
             'money': prometheus_client.Gauge(
                 name='character_money',
                 documentation='Character money',
-                labelnames=['character']
+                labelnames=['character', 'email']
                 )
             }
         }
@@ -426,19 +431,22 @@ def monitor_active(db_hostname, db_username, db_password, db_database, poll_inte
             server=db_hostname,
             username=db_username,
             password=db_password,
-            database=db_database)
+            database=db_database
+            )
 
         # Update active characters and maps
         charinfo_active, mapinfo_active = update_active(
             charinfo_active=charinfo_active,
             mapinfo_active=mapinfo_active,
             charinfo_db=charinfo_db,
-            gauges=gauges)
+            gauges=gauges
+            )
 
         # Prepare for next iteration
         charinfo_active, last_reset = reset_active(
             charinfo_active=charinfo_active,
-            last_reset=last_reset)
+            last_reset=last_reset
+            )
         logging.info('Iteration complete, sleeping %s seconds', poll_interval)
         time.sleep(poll_interval)
 
@@ -460,3 +468,4 @@ if __name__ == '__main__':
         db_database=DB_DATABASE,
         poll_interval=POLL_INTERVAL
         )
+
