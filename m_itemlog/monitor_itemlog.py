@@ -18,7 +18,7 @@ else:
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 
 
-def gen_itemlog_db(server, username, password, database, action_keys):
+def gen_itemlog_db(server, username, password, database, action_keys, poll_interval):
     """
     Return character itemlog activity from ItemLog table.
     """
@@ -37,7 +37,7 @@ def gen_itemlog_db(server, username, password, database, action_keys):
     # Perform DB query
     try: 
         cursor = connection.cursor()
-        cursor.execute('rocp_admin_itemlog_db')
+        cursor.execute('EXEC rocp_admin_itemlog_db @pollinterval = ?', poll_interval)
         results = cursor.fetchall()
     except pyodbc.OperationalError:
         logging.info('No itemlog updates in the last interval')
@@ -333,7 +333,8 @@ def monitor_itemlog(db_hostname, db_username, db_password, db_database, poll_int
             username=db_username,
             password=db_password,
             database=db_database,
-            action_keys=gauges.keys()
+            action_keys=gauges.keys(),
+            poll_interval=poll_interval
             )
 
         # Update itemlog_active characters
@@ -371,3 +372,4 @@ if __name__ == '__main__':
         db_database=DB_DATABASE,
         poll_interval=POLL_INTERVAL
         )
+
