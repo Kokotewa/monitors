@@ -8,7 +8,7 @@
 SELECT srcCharName,
   srcCharID,
   srcAccountID,
-  Action FROM itemLog.dbo.ItemLog where logtime > DATEADD(minute, -12, GETDATE())
+  Action FROM itemLog.dbo.ItemLog where logtime > DATEADD(minute, -@pollinterval, GETDATE())
 ```
 
 ## Example m_itemlog Logs
