@@ -228,8 +228,7 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
         logging.info('Character %s is deleted, removing from charinfo_active', character)
         gauges['active']['character'].labels(
             character=character,
-            GID=charinfo_active[character]['id']['GID'],
-            AID=charinfo_active[character]['id']['AID']
+            email=charinfo_active[character]['email'],
             ).set(0)
         del charinfo_active[character]
 
