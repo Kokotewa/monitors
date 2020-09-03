@@ -218,7 +218,8 @@ def update_active(charinfo_active, mapinfo_active, charinfo_db, gauges):
                 'hour': 0,
                 'consecutive': 0,
                 'now': 0
-                }
+                },
+            'email': charinfo_db[character]['email']
             }
 
     # Remove charinfo_active keys for deleted characters
