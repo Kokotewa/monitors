@@ -22,7 +22,7 @@ services:
       DB_HOSTNAME: '192.168.1.100'
       DB_USERNAME: 'monitoractive'
       DB_DATABASE: 'rocp' 
-      POLL_INTERVAL: 720
+      POLL_INTERVAL: 300 
     secrets:
       - source: monitoractive-DB_PASSWORD
         target: /run/secrets/DB_PASSWORD
@@ -35,10 +35,18 @@ services:
       DB_HOSTNAME: '192.168.1.100'
       DB_USERNAME: 'monitoritemlog'
       DB_DATABASE: 'rocp'
-      POLL_INTERVAL: 720
+      POLL_INTERVAL: 300
     secrets:
       - source: monitoritemlog-DB_PASSWORD
         target: /run/secrets/DB_PASSWORD
+
+  m_tls_expiry:
+    image: "monitor_tls_expiry:1.0.0"
+    ports:
+     - 9093:80
+    environment:
+      POLL_INTERVAL: 900
+      HOST_STRING: "kokotewa.com:443, mail.kokotewa.com:465, blog.kokotewa.com:443, metric.kokotewa.com:443, cp.kokotewa.com:443, test.kokotewa.com:443"
 
   prometheus:
     image: prom/prometheus
