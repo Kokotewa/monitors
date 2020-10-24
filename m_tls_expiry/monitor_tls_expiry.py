@@ -75,7 +75,9 @@ def monitor_tls_expiry(host_string, poll_interval):
 if __name__ == '__main__':
     HOST_STRING = str(os.getenv('HOST_STRING'))
     POLL_INTERVAL = int(os.getenv('POLL_INTERVAL'))
+    PROMETHEUS_PORT = int(os.getenv('PROMETHEUS_PORT'))
 
+    prometheus_client.start_http_server(PROMETHEUS_PORT)
     monitor_tls_expiry(
         host_string=HOST_STRING,
         poll_interval=POLL_INTERVAL

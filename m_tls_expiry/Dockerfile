@@ -12,6 +12,7 @@ RUN pip3 install -r requirements.txt
 
 # Environment Placeholders
 ENV POLL_INTERVAL=900
+ENV PROMETHEUS_PORT=80
 
 # Copy Script
 COPY monitor_tls_expiry.py monitor_tls_expiry.py

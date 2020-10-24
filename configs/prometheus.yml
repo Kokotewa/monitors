@@ -21,3 +21,7 @@ scrape_configs:
   - job_name: 'm_itemlog'
     static_configs:
     - targets: ['m_itemlog:80']
+
+  - job_name: 'm_tls_expiry'
+    static_configs:
+    - targets: ['m_tls_expiry:80']    
